@@ -1,3 +1,5 @@
+import UserInput from "@/components/ui/deep-research/UserInput";
+
 export default function Home() {
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-start gap-8 py-16">
@@ -10,6 +12,8 @@ export default function Home() {
           research report
         </p>
       </div>
+
+      <UserInput />
     </main>
   );
 }
