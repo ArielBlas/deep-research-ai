@@ -25,8 +25,19 @@ const UserInput = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await fetch("/api/generate-questions", {
+        method: "POST",
+        body: JSON.stringify({
+          topic: values.input,
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (
@@ -44,7 +55,7 @@ const UserInput = () => {
                 <Input
                   placeholder="Enter your research topic"
                   {...field}
-                  className="rounded-full w-full flex flex-1 p-4 py-6 placeholder:text-sm bg-white/60 border-solid shadow-none"
+                  className="rounded-full w-full p-4 py-6 placeholder:text-sm bg-white/60 border-solid shadow-none"
                 />
               </FormControl>
               <FormMessage />
