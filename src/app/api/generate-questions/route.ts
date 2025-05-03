@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { z } from "zod";
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY || "",
@@ -14,11 +15,14 @@ const clarifyResearchGoals = async (topic: string) => {
   - Any particular perspective or excluded sources
   `;
   try {
-    const { text } = await generateText({
-      model: openrouter("openai/chatgpt-4o-latest"),
+    const { object } = await generateObject({
+      model: openrouter("meta-llama/llama-3.3-70b-instruct"),
       prompt,
+      schema: z.object({
+        questions: z.array(z.string()),
+      }),
     });
-    return text;
+    return object.questions;
   } catch (error) {
     console.error("Error while generating questions:", error);
   }
@@ -31,7 +35,7 @@ export async function POST(req: Request) {
   try {
     const questions = await clarifyResearchGoals(topic);
     console.log("Questions:", questions);
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json(questions);
   } catch (error) {
     console.error("Error while generating questions:", error);
     return NextResponse.json(

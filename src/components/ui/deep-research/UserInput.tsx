@@ -2,7 +2,7 @@
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { set, z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,12 +12,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useDeepResearchStore } from "@/store/deepResearch";
 
 const formSchema = z.object({
   input: z.string().min(2).max(200),
 });
 
 const UserInput = () => {
+  const { setQuestions, seTopic } = useDeepResearchStore();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -27,6 +30,7 @@ const UserInput = () => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setTopic(values.input);
       const response = await fetch("/api/generate-questions", {
         method: "POST",
         body: JSON.stringify({
@@ -34,6 +38,7 @@ const UserInput = () => {
         }),
       });
       const data = await response.json();
+      setQuestions(data);
       console.log(data);
     } catch (error) {
       console.log(error);
