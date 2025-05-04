@@ -1,3 +1,4 @@
+import QnA from "@/components/ui/deep-research/QnA";
 import UserInput from "@/components/ui/deep-research/UserInput";
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
       </div>
 
       <UserInput />
+      <QnA />
     </main>
   );
 }
