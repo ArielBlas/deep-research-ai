@@ -20,12 +20,20 @@ const formSchema = z.object({
 });
 
 const QuestionForm = () => {
-  const { questions } = useDeepResearchStore();
+  const {
+    questions,
+    currentQuestion,
+    answers,
+    setCurrentQuestion,
+    setAnswers,
+    setIsCompleted,
+    isLoading,
+  } = useDeepResearchStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      answer: "",
+      answer: answers[currentQuestion] || "",
     },
   });
 
@@ -34,7 +42,21 @@ const QuestionForm = () => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values);
+
+    const newAnswers = [...answers];
+    newAnswers[currentQuestion] = values.answer;
+    setAnswers(newAnswers);
+
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      form.reset();
+    } else {
+      setIsCompleted(true);
+    }
   }
+
+  if (questions.length === 0) return null;
+
   return (
     <Card className="w-full max-w-[90vw] sm:max-w-[80vw] xl:max-w-[50vw] shadow-none">
       <CardHeader className="px-4 sm:px-6">
@@ -43,6 +65,7 @@ const QuestionForm = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 w-full px-4 sm:px-6">
+        <p className="text-base">{questions[currentQuestion]}</p>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
@@ -61,9 +84,36 @@ const QuestionForm = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <div className="flex justify-between items-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (currentQuestion > 0) {
+                    setCurrentQuestion(currentQuestion - 1);
+                    form.setValue("answer", answers[currentQuestion - 1] || "");
+                  }
+                }}
+              >
+                Previous
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {currentQuestion === questions.length - 1
+                  ? "Start Research"
+                  : "Next"}
+              </Button>
+            </div>
           </form>
         </Form>
+
+        <div className="h-1 w-full bg-gray-200 rounded">
+          <div
+            className="h-1 bg-primary rounded transition-all duration-300"
+            style={{
+              width: `${((currentQuestion + 1) / questions.length) * 100}%`,
+            }}
+          ></div>
+        </div>
       </CardContent>
     </Card>
   );
