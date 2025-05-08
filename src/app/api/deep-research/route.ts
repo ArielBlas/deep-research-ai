@@ -1,3 +1,6 @@
+import { createDataStreamResponse } from "ai";
+import { ResearchState } from "./types";
+
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
@@ -12,14 +15,27 @@ export async function POST(req: Request) {
     console.log("Topic:", topic);
     console.log("Clarifications:", clarifications);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-      }),
-      {
-        status: 200,
-      }
-    );
+    return createDataStreamResponse({
+      status: 200,
+      statusText: "OK",
+      headers: {
+        "Custom-Header": "value",
+      },
+      async execute(dataStream) {
+        // Write data
+        // dataStream.writeData({ value: "Hello" });
+
+        const researchState: ResearchState = {
+          topic: topic,
+          completedSteps: 0,
+          tokenUsed: 0,
+          findings: [],
+          proccessedUrl: new Set(),
+          clarificationsText: JSON.stringify(clarifications),
+        };
+      },
+      // onError: error => `Custom error: ${error.message}`,
+    });
   } catch (error) {
     return new Response(
       JSON.stringify({
