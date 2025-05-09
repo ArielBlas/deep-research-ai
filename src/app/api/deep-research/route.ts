@@ -1,5 +1,6 @@
 import { createDataStreamResponse } from "ai";
 import { ResearchState } from "./types";
+import { deepResearch } from "./main";
 
 export async function POST(req: Request) {
   try {
@@ -16,11 +17,6 @@ export async function POST(req: Request) {
     console.log("Clarifications:", clarifications);
 
     return createDataStreamResponse({
-      status: 200,
-      statusText: "OK",
-      headers: {
-        "Custom-Header": "value",
-      },
       async execute(dataStream) {
         // Write data
         // dataStream.writeData({ value: "Hello" });
@@ -33,6 +29,8 @@ export async function POST(req: Request) {
           proccessedUrl: new Set(),
           clarificationsText: JSON.stringify(clarifications),
         };
+
+        await deepResearch(researchState, dataStream);
       },
       // onError: error => `Custom error: ${error.message}`,
     });
