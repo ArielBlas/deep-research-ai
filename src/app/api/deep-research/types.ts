@@ -20,3 +20,9 @@ export interface ModelCallOptions<T> {
   system: string;
   schema: z.ZodType<T>;
 }
+
+export interface SearchResult {
+  title: string;
+  url: string;
+  content: string;
+}
