@@ -1,6 +1,11 @@
 import { z } from "zod";
-import { ResearchState, SearchResult } from "./types";
-import { getPlanningPrompt, PLANNING_SYSTEM_PROMPT } from "./prompts";
+import { ResearchFindings, ResearchState, SearchResult } from "./types";
+import {
+  EXTRACTION_SYSTEM_PROMPT,
+  getExtractionPrompt,
+  getPlanningPrompt,
+  PLANNING_SYSTEM_PROMPT,
+} from "./prompts";
 import { callModel } from "./model-caller";
 import { exa } from "./service";
 
@@ -34,7 +39,7 @@ export async function search(
   try {
     const searchResult = await exa.searchAndContents(query, {
       type: "keyword",
-      numResults: 3,
+      numResults: 1,
       startPublishedDate: new Date(
         Date.now() - 365 * 24 * 60 * 60 * 1000
       ).toISOString(), // 1 year ago
@@ -63,4 +68,64 @@ export async function search(
   } catch (error) {
     console.error("error: ", error);
   }
+}
+
+export async function extractContent(
+  content: string,
+  url: string,
+  researchState: ResearchState
+) {
+  const result = await callModel(
+    {
+      model: "openai/gpt-4o-mini",
+      prompt: getExtractionPrompt(
+        content,
+        researchState.topic,
+        researchState.clarificationsText
+      ),
+      system: EXTRACTION_SYSTEM_PROMPT,
+      schema: z.object({
+        summary: z.string().describe("A comprehensive summary of the content"),
+      }),
+    },
+    researchState
+  );
+
+  return {
+    url,
+    summary: (result as any).summary,
+  };
+}
+
+export async function processSearchResults(
+  searchResults: SearchResult[],
+  researchState: ResearchState
+): Promise<ResearchFindings[]> {
+  const extractionPromises = searchResults.map((result) =>
+    extractContent(result.content, result.url, researchState)
+  );
+  const extractionResults = await Promise.allSettled(extractionPromises);
+
+  type ExtractionResult = {
+    url: string;
+    summary: string;
+  };
+
+  const newFindings = extractionResults
+    .filter(
+      (result): result is PromiseFulfilledResult<ExtractionResult> =>
+        result.status === "fulfilled" &&
+        result.value !== null &&
+        result.value !== undefined
+    )
+    .map((result) => {
+      const { summary, url } = result.value;
+
+      return {
+        summary,
+        source: url,
+      };
+    });
+
+  return newFindings;
 }

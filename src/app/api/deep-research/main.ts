@@ -1,4 +1,8 @@
-import { generateSearchQueries, search } from "./research-functions";
+import {
+  generateSearchQueries,
+  processSearchResults,
+  search,
+} from "./research-functions";
 import { ResearchState } from "./types";
 
 export async function deepResearch(
@@ -21,7 +25,16 @@ export async function deepResearch(
       .map((result) => result.value)
       .flat();
 
-    console.log("allSearchResults", allSearchResults);
+    const newFindings = await processSearchResults(
+      allSearchResults,
+      researchState
+    );
+
+    researchState.findings = [...researchState.findings, ...newFindings];
+
+    console.log(newFindings);
+
+    const currentQueries = [];
   }
 
   return initialQueries;
