@@ -1,18 +1,27 @@
 import { z } from "zod";
 import { ResearchFindings, ResearchState, SearchResult } from "./types";
 import {
+  ANALYSIS_SYSTEM_PROMPT,
   EXTRACTION_SYSTEM_PROMPT,
+  getAnalysisPrompt,
   getExtractionPrompt,
   getPlanningPrompt,
   PLANNING_SYSTEM_PROMPT,
 } from "./prompts";
 import { callModel } from "./model-caller";
 import { exa } from "./service";
+import { combineFindings } from "./utils";
+import {
+  MAX_CONTENT_CHARS,
+  MAX_ITERATIONS,
+  MAX_SEARCH_RESULTS,
+  MODELS,
+} from "./constants";
 
 export async function generateSearchQueries(researchState: ResearchState) {
   const result = await callModel(
     {
-      model: "openai/gpt-4oturbo",
+      model: MODELS.PLANNING,
       prompt: getPlanningPrompt(
         researchState.topic,
         researchState.clarificationsText
@@ -39,7 +48,7 @@ export async function search(
   try {
     const searchResult = await exa.searchAndContents(query, {
       type: "keyword",
-      numResults: 1,
+      numResults: MAX_SEARCH_RESULTS,
       startPublishedDate: new Date(
         Date.now() - 365 * 24 * 60 * 60 * 1000
       ).toISOString(), // 1 year ago
@@ -50,7 +59,7 @@ export async function search(
       endCrawlDate: new Date().toISOString(),
       excludeDomains: ["https://youtube.com"],
       text: {
-        maxCharacters: 20000,
+        maxCharacters: MAX_CONTENT_CHARS,
       },
     });
 
@@ -77,7 +86,7 @@ export async function extractContent(
 ) {
   const result = await callModel(
     {
-      model: "openai/gpt-4o-mini",
+      model: MODELS.EXTRACTION,
       prompt: getExtractionPrompt(
         content,
         researchState.topic,
@@ -128,4 +137,46 @@ export async function processSearchResults(
     });
 
   return newFindings;
+}
+
+export async function analyzeFindings(
+  researchState: ResearchState,
+  currentQueries: string[],
+  currentIteration: number
+) {
+  try {
+    const contentText = combineFindings(researchState.findings);
+
+    const result = await callModel(
+      {
+        model: MODELS.ANALYSIS,
+        prompt: getAnalysisPrompt(
+          contentText,
+          researchState.topic,
+          researchState.clarificationsText,
+          currentQueries,
+          currentIteration,
+          MAX_ITERATIONS,
+          contentText.length
+        ),
+        system: ANALYSIS_SYSTEM_PROMPT,
+        schema: z.object({
+          sufficient: z
+            .boolean()
+            .describe(
+              "Whether the collected content is sufficient for a useful report"
+            ),
+          gaps: z.array(z.string()).describe("Identified gaps in the content"),
+          queries: z
+            .array(z.string())
+            .describe("Search queries for missing information. Max 3 queries"),
+        }),
+      },
+      researchState
+    );
+
+    return result;
+  } catch (error) {
+    console.log(error);
+  }
 }
