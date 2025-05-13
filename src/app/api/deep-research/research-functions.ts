@@ -6,7 +6,9 @@ import {
   getAnalysisPrompt,
   getExtractionPrompt,
   getPlanningPrompt,
+  getReportPrompt,
   PLANNING_SYSTEM_PROMPT,
+  REPORT_SYSTEM_PROMPT,
 } from "./prompts";
 import { callModel } from "./model-caller";
 import { exa } from "./service";
@@ -176,6 +178,28 @@ export async function analyzeFindings(
     );
 
     return result;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function generateReport(researchState: ResearchState) {
+  try {
+    const contentText = combineFindings(researchState.findings);
+
+    const report = await callModel(
+      {
+        model: MODELS.REPORT,
+        prompt: getReportPrompt(
+          contentText,
+          researchState.topic,
+          researchState.clarificationsText
+        ),
+        system: REPORT_SYSTEM_PROMPT,
+      },
+      researchState
+    );
+    return report;
   } catch (error) {
     console.log(error);
   }
