@@ -26,3 +26,9 @@ export interface SearchResult {
   url: string;
   content: string;
 }
+
+export interface Activity {
+  type: "search" | "extract" | "analyze" | "generate" | "planning";
+  status: "pending" | "complete" | "warning" | "error";
+  message: string;
+}

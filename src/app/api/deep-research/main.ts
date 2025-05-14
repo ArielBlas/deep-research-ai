@@ -14,6 +14,12 @@ export async function deepResearch(
   dataStream: any
 ) {
   let iteration = 0;
+
+  const activityTracker = dataStream.createActivityTracker(
+    dataStream,
+    researchState
+  );
+
   const initialQueries = await generateSearchQueries(researchState);
   let currentQueries = (initialQueries as any).searchQueries;
 
