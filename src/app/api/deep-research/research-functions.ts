@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { ResearchFindings, ResearchState, SearchResult } from "./types";
+import {
+  ActivityTracker,
+  ResearchFindings,
+  ResearchState,
+  SearchResult,
+} from "./types";
 import {
   ANALYSIS_SYSTEM_PROMPT,
   EXTRACTION_SYSTEM_PROMPT,
@@ -20,7 +25,12 @@ import {
   MODELS,
 } from "./constants";
 
-export async function generateSearchQueries(researchState: ResearchState) {
+export async function generateSearchQueries(
+  researchState: ResearchState,
+  activityTracker: ActivityTracker
+) {
+  activityTracker.add("planning", "pending", "Planing the research");
+
   const result = await callModel(
     {
       model: MODELS.PLANNING,
@@ -40,13 +50,18 @@ export async function generateSearchQueries(researchState: ResearchState) {
     researchState
   );
 
+  activityTracker.add("planning", "complete", "Crafted the research plan");
+
   return result;
 }
 
 export async function search(
   query: string,
-  ResearchState: ResearchState
+  ResearchState: ResearchState,
+  activityTracker: ActivityTracker
 ): Promise<SearchResult[]> {
+  activityTracker.add("search", "pending", `Searching for ${query}`);
+
   try {
     const searchResult = await exa.searchAndContents(query, {
       type: "keyword",
@@ -75,6 +90,12 @@ export async function search(
 
     ResearchState.completedSteps++;
 
+    activityTracker.add(
+      "search",
+      "complete",
+      `Found ${filteredResults.length} results for ${query}`
+    );
+
     return filteredResults;
   } catch (error) {
     console.error("error: ", error);
@@ -84,8 +105,10 @@ export async function search(
 export async function extractContent(
   content: string,
   url: string,
-  researchState: ResearchState
+  researchState: ResearchState,
+  activityTracker: ActivityTracker
 ) {
+  activityTracker.add("extract", "pending", `Extracting content for ${url}`);
   const result = await callModel(
     {
       model: MODELS.EXTRACTION,
@@ -102,6 +125,8 @@ export async function extractContent(
     researchState
   );
 
+  activityTracker.add("extract", "complete", `Extracted content for ${url}`);
+
   return {
     url,
     summary: (result as any).summary,
@@ -110,10 +135,11 @@ export async function extractContent(
 
 export async function processSearchResults(
   searchResults: SearchResult[],
-  researchState: ResearchState
+  researchState: ResearchState,
+  activityTracker: ActivityTracker
 ): Promise<ResearchFindings[]> {
   const extractionPromises = searchResults.map((result) =>
-    extractContent(result.content, result.url, researchState)
+    extractContent(result.content, result.url, researchState, activityTracker)
   );
   const extractionResults = await Promise.allSettled(extractionPromises);
 
@@ -144,7 +170,8 @@ export async function processSearchResults(
 export async function analyzeFindings(
   researchState: ResearchState,
   currentQueries: string[],
-  currentIteration: number
+  currentIteration: number,
+  activityTracker: ActivityTracker
 ) {
   try {
     const contentText = combineFindings(researchState.findings);
@@ -183,7 +210,10 @@ export async function analyzeFindings(
   }
 }
 
-export async function generateReport(researchState: ResearchState) {
+export async function generateReport(
+  researchState: ResearchState,
+  activityTracker: ActivityTracker
+) {
   try {
     const contentText = combineFindings(researchState.findings);
 

@@ -6,11 +6,17 @@ export const createActivityTracker = (
   researchState: ResearchState
 ) => {
   return {
-    add: (activity: Activity) => {
+    add: (
+      type: Activity["type"],
+      status: Activity["status"],
+      message: Activity["message"]
+    ) => {
       dataStream.writeDate({
         type: "activity",
         content: {
-          ...activity,
+          type,
+          status,
+          message,
           timestamp: Date.now(),
           completedSteps: researchState.completedSteps,
           tokenUsed: researchState.tokenUsed,

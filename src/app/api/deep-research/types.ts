@@ -32,3 +32,11 @@ export interface Activity {
   status: "pending" | "complete" | "warning" | "error";
   message: string;
 }
+
+export interface ActivityTracker {
+  add: (
+    type: Activity["type"],
+    status: Activity["status"],
+    message: Activity["message"]
+  ) => void;
+}

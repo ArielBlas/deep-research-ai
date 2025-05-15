@@ -20,7 +20,10 @@ export async function deepResearch(
     researchState
   );
 
-  const initialQueries = await generateSearchQueries(researchState);
+  const initialQueries = await generateSearchQueries(
+    researchState,
+    activityTracker
+  );
   let currentQueries = (initialQueries as any).searchQueries;
 
   while (
@@ -33,7 +36,7 @@ export async function deepResearch(
     console.log("We are running on the iteration number: ", iteration);
 
     const searchResults = currentQueries.map((query: string) =>
-      search(query, researchState)
+      search(query, researchState, activityTracker)
     );
     const searchResultsResponses = await Promise.allSettled(searchResults);
 
@@ -49,7 +52,8 @@ export async function deepResearch(
 
     const newFindings = await processSearchResults(
       allSearchResults,
-      researchState
+      researchState,
+      activityTracker
     );
 
     console.log("Results are processed!");
@@ -59,7 +63,8 @@ export async function deepResearch(
     const analysis = await analyzeFindings(
       researchState,
       currentQueries,
-      iteration
+      iteration,
+      activityTracker
     );
 
     console.log("Analysis: ", analysis);
@@ -75,7 +80,7 @@ export async function deepResearch(
 
   console.log("We are outside of the loop with total iterations: ", iteration);
 
-  const report = await generateReport(researchState);
+  const report = await generateReport(researchState, activityTracker);
 
   console.log("Report: ", report);
 
