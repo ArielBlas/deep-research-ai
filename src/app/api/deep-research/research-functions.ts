@@ -174,6 +174,11 @@ export async function analyzeFindings(
   activityTracker: ActivityTracker
 ) {
   try {
+    activityTracker.add(
+      "analyze",
+      "pending",
+      `Analyzing research findings (iteration ${currentIteration} of ${MAX_ITERATIONS})`
+    );
     const contentText = combineFindings(researchState.findings);
 
     const result = await callModel(
@@ -204,6 +209,16 @@ export async function analyzeFindings(
       researchState
     );
 
+    const isContentSufficient = typeof result !== "string" && result.sufficient;
+
+    activityTracker.add(
+      "analyze",
+      "complete",
+      `Analyzed collected research findings: ${
+        isContentSufficient ? "Content is sufficient" : "More research needed!"
+      }`
+    );
+
     return result;
   } catch (error) {
     console.log(error);
@@ -215,6 +230,12 @@ export async function generateReport(
   activityTracker: ActivityTracker
 ) {
   try {
+    activityTracker.add(
+      "generate",
+      "pending",
+      "Generating comprehensive report!"
+    );
+
     const contentText = combineFindings(researchState.findings);
 
     const report = await callModel(
@@ -229,6 +250,13 @@ export async function generateReport(
       },
       researchState
     );
+
+    activityTracker.add(
+      "generate",
+      "complete",
+      `Generated comprehensive report, Total tokens used: ${researchState.tokenUsed}. Research completed in ${researchState.completedSteps} steps.`
+    );
+
     return report;
   } catch (error) {
     console.log(error);

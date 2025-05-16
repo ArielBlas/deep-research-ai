@@ -82,6 +82,11 @@ export async function deepResearch(
 
   const report = await generateReport(researchState, activityTracker);
 
+  dataStream.writeData({
+    type: "report",
+    data: report,
+  });
+
   console.log("Report: ", report);
 
   return initialQueries;
