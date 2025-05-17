@@ -40,3 +40,8 @@ export interface ActivityTracker {
     message: Activity["message"]
   ) => void;
 }
+
+export interface Source {
+  url: string;
+  title: string;
+}
