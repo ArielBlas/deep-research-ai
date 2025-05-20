@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import QuestionForm from "./QuestionForm";
 import { useChat } from "@ai-sdk/react";
 import ResearchActivities from "./ResearchActivities";
+import ResearchReport from "./ResearchReport";
 
 const QnA = () => {
   const {
@@ -83,6 +84,7 @@ const QnA = () => {
     <div className="flex gap-4 w-full flex-col items-center mb-16">
       <QuestionForm />
       <ResearchActivities />
+      <ResearchReport />
     </div>
   );
 };
