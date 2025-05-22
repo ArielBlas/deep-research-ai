@@ -4,9 +4,13 @@ import React, { ComponentPropsWithRef } from "react";
 import { Card } from "../card";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import {
+  Prism as SyntaxHighlighter,
+  SyntaxHighlighterProps,
+} from "react-syntax-highlighter";
 import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
+import { Button } from "../button";
 
 type CodeProps = ComponentPropsWithRef<"code"> & {
   inline?: boolean;
@@ -14,6 +18,19 @@ type CodeProps = ComponentPropsWithRef<"code"> & {
 
 const ResearchReport = () => {
   const { report, isCompleted, isLoading, topic } = useDeepResearchStore();
+
+  const handleMarkdownDownload = () => {
+    const content = report.split("<report>")[1].split("</report>")[0];
+    const blob = new Blob([content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${topic}-research-report.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   if (!report && isLoading) {
     return (
@@ -34,6 +51,15 @@ const ResearchReport = () => {
 
   return (
     <Card className="max-w-[90vw] xl:max-w-[60vw] relative px-4 py-6 rounded-xl border-black/10 border-solid shadow-none p-6">
+      <div className="flex justify-end gap-2 mb-4 absolute top-4 right-4">
+        <Button
+          size="sm"
+          className="flex items-center gap-2 rounded"
+          onClick={handleMarkdownDownload}
+        >
+          <Download className="w-4 h-4" /> Download
+        </Button>
+      </div>
       <div className="prose prose-sm md:prose-base max-w-none prose-pre:p-2">
         <Markdown
           remarkPlugins={[remarkGfm]}
@@ -43,7 +69,7 @@ const ResearchReport = () => {
               const language = match ? match[1] : "";
 
               if (!inline && language) {
-                const syntaxHighlighterProps = {
+                const syntaxHighlighterProps: SyntaxHighlighterProps = {
                   style: nightOwl,
                   language,
                   preTag: "div",
