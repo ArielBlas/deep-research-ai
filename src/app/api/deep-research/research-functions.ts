@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import {
   ActivityTracker,
@@ -17,7 +18,7 @@ import {
 } from "./prompts";
 import { callModel } from "./model-caller";
 import { exa } from "./service";
-import { combineFindings } from "./utils";
+import { combineFindings, handleError } from "./utils";
 import {
   MAX_CONTENT_CHARS,
   MAX_ITERATIONS,
@@ -29,30 +30,48 @@ export async function generateSearchQueries(
   researchState: ResearchState,
   activityTracker: ActivityTracker
 ) {
-  activityTracker.add("planning", "pending", "Planing the research");
+  try {
+    activityTracker.add("planning", "pending", "Planing the research");
 
-  const result = await callModel(
-    {
-      model: MODELS.PLANNING,
-      prompt: getPlanningPrompt(
-        researchState.topic,
-        researchState.clarificationsText
-      ),
-      system: PLANNING_SYSTEM_PROMPT,
-      schema: z.object({
-        searchQueries: z
-          .array(z.string())
-          .describe(
-            "The search queries that can be used to find the most relevant content which can be used to write the comprehensive report on the given topic. (max 3 queries)"
-          ),
-      }),
-    },
-    researchState
-  );
+    const result = await callModel(
+      {
+        model: MODELS.PLANNING,
+        prompt: getPlanningPrompt(
+          researchState.topic,
+          researchState.clarificationsText
+        ),
+        system: PLANNING_SYSTEM_PROMPT,
+        schema: z.object({
+          searchQueries: z
+            .array(z.string())
+            .describe(
+              "The search queries that can be used to find the most relevant content which can be used to write the comprehensive report on the given topic. (max 3 queries)"
+            ),
+        }),
+      },
+      researchState
+    );
 
-  activityTracker.add("planning", "complete", "Crafted the research plan");
+    activityTracker.add("planning", "complete", "Crafted the research plan");
 
-  return result;
+    return result;
+  } catch (error) {
+    return handleError(
+      error,
+      `Research planning`,
+      activityTracker,
+      "planning",
+      [
+        {
+          searchQueries: [
+            `${researchState.topic} best practices`,
+            `${researchState.topic} guidelines`,
+            `${researchState.topic} examples`,
+          ],
+        },
+      ]
+    );
+  }
 }
 
 export async function search(
@@ -99,6 +118,15 @@ export async function search(
     return filteredResults;
   } catch (error) {
     console.error("error: ", error);
+    return (
+      handleError(
+        error,
+        `Searching for ${query}`,
+        activityTracker,
+        "search",
+        []
+      ) || []
+    );
   }
 }
 
@@ -108,29 +136,43 @@ export async function extractContent(
   researchState: ResearchState,
   activityTracker: ActivityTracker
 ) {
-  activityTracker.add("extract", "pending", `Extracting content for ${url}`);
-  const result = await callModel(
-    {
-      model: MODELS.EXTRACTION,
-      prompt: getExtractionPrompt(
-        content,
-        researchState.topic,
-        researchState.clarificationsText
-      ),
-      system: EXTRACTION_SYSTEM_PROMPT,
-      schema: z.object({
-        summary: z.string().describe("A comprehensive summary of the content"),
-      }),
-    },
-    researchState
-  );
+  try {
+    activityTracker.add("extract", "pending", `Extracting content for ${url}`);
+    const result = await callModel(
+      {
+        model: MODELS.EXTRACTION,
+        prompt: getExtractionPrompt(
+          content,
+          researchState.topic,
+          researchState.clarificationsText
+        ),
+        system: EXTRACTION_SYSTEM_PROMPT,
+        schema: z.object({
+          summary: z
+            .string()
+            .describe("A comprehensive summary of the content"),
+        }),
+      },
+      researchState
+    );
 
-  activityTracker.add("extract", "complete", `Extracted content for ${url}`);
+    activityTracker.add("extract", "complete", `Extracted content for ${url}`);
 
-  return {
-    url,
-    summary: (result as any).summary,
-  };
+    return {
+      url,
+      summary: (result as any).summary,
+    };
+  } catch (error) {
+    return (
+      handleError(
+        error,
+        `Content extraction from ${url}`,
+        activityTracker,
+        "extract",
+        null
+      ) || null
+    );
+  }
 }
 
 export async function processSearchResults(
@@ -221,7 +263,11 @@ export async function analyzeFindings(
 
     return result;
   } catch (error) {
-    console.log(error);
+    return handleError(error, `Content analysis`, activityTracker, "analyze", {
+      sufficient: false,
+      gaps: ["Unable to analyze content"],
+      queries: ["Please try a different search query"],
+    });
   }
 }
 
@@ -260,5 +306,12 @@ export async function generateReport(
     return report;
   } catch (error) {
     console.log(error);
+    return handleError(
+      error,
+      `Report generation`,
+      activityTracker,
+      "generate",
+      "Error generating report. Please try again."
+    );
   }
 }
