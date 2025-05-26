@@ -48,8 +48,10 @@ export async function generateSearchQueries(
               "The search queries that can be used to find the most relevant content which can be used to write the comprehensive report on the given topic. (max 3 queries)"
             ),
         }),
+        activityType: "planning",
       },
-      researchState
+      researchState,
+      activityTracker
     );
 
     activityTracker.add("planning", "complete", "Crafted the research plan");
@@ -152,8 +154,10 @@ export async function extractContent(
             .string()
             .describe("A comprehensive summary of the content"),
         }),
+        activityType: "extract",
       },
-      researchState
+      researchState,
+      activityTracker
     );
 
     activityTracker.add("extract", "complete", `Extracted content for ${url}`);
@@ -247,8 +251,10 @@ export async function analyzeFindings(
             .array(z.string())
             .describe("Search queries for missing information. Max 3 queries"),
         }),
+        activityType: "analyze",
       },
-      researchState
+      researchState,
+      activityTracker
     );
 
     const isContentSufficient = typeof result !== "string" && result.sufficient;
@@ -293,8 +299,10 @@ export async function generateReport(
           researchState.clarificationsText
         ),
         system: REPORT_SYSTEM_PROMPT,
+        activityType: "generate",
       },
-      researchState
+      researchState,
+      activityTracker
     );
 
     activityTracker.add(
