@@ -34,7 +34,7 @@ const ResearchReport = () => {
 
   if (!report && isLoading) {
     return (
-      <Card className="p-4 max-w-[50vw] rounded-xl px-4 py-2 bg-white/60">
+      <Card className="p-4 max-w-[50vw] rounded-xl px-4 py-2 shadow-none bg-white/60 backdrop-blur-sm border border-black/10 border-solid">
         <div className="flex flex-col items-center justify-center space-y-4 p-8">
           <Loader2 className="w-8 h-8 animate-spin" />
           <p className="text-sm text-muted-foreground">
@@ -50,7 +50,11 @@ const ResearchReport = () => {
   if (!isCompleted) return;
 
   return (
-    <Card className="max-w-[90vw] xl:max-w-[60vw] relative px-4 py-6 rounded-xl border-black/10 border-solid shadow-none p-6">
+    <Card
+      className="max-w-[90vw] xl:max-w-[60vw] relative px-4 py-6 rounded-xl border-black/10 border-solid shadow-none p-6
+     bg-white/60 backdrop-blur-sm border
+    "
+    >
       <div className="flex justify-end gap-2 mb-4 absolute top-4 right-4">
         <Button
           size="sm"

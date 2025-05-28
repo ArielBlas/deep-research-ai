@@ -40,7 +40,7 @@ const ResearchActivities = () => {
             </TabsList>
             <TabsContent
               value="activities"
-              className="h-[calc(100%-60px)] overflow-y-auto border-black/10 border-solid"
+              className="h-[calc(100%-60px)] overflow-y-auto border-black/10 border-solid shadow-none bg-white/60 backdrop-blur-sm border rounded-xl"
             >
               <ul className="space-y-4 p-4">
                 {activities.map((activity, index) => (
@@ -69,9 +69,12 @@ const ResearchActivities = () => {
                           : activity.message}
                       </p>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {format(activity.timestamp, "HH:mm:ss")}
-                    </span>
+
+                    {activity.timestamp && (
+                      <span className="text-xs text-muted-foreground">
+                        {format(activity.timestamp, "HH:mm:ss")}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -79,7 +82,7 @@ const ResearchActivities = () => {
             {sources.length > 0 && (
               <TabsContent
                 value="sources"
-                className="h-[calc(100%-60px)] overflow-y-auto border-black/10 border-solid"
+                className="h-[calc(100%-60px)] overflow-y-auto shadow-none bg-white/60 backdrop-blur-sm border rounded-xl border-black/10 border-solid"
               >
                 <ul className="space-y-4 p-4">
                   {sources.map((source, index) => (
