@@ -7,6 +7,7 @@ import { useChat } from "@ai-sdk/react";
 import ResearchActivities from "./ResearchActivities";
 import ResearchReport from "./ResearchReport";
 import ResearchTimer from "./ResearchTimer";
+import CompletedQuestions from "./CompletedQuestions";
 
 const QnA = () => {
   const {
@@ -84,6 +85,7 @@ const QnA = () => {
   return (
     <div className="flex gap-4 w-full flex-col items-center mb-16">
       <QuestionForm />
+      <CompletedQuestions />
       <ResearchActivities />
       <ResearchTimer />
       <ResearchReport />

@@ -28,6 +28,7 @@ const QuestionForm = () => {
     setAnswers,
     setIsCompleted,
     isLoading,
+    isCompleted,
   } = useDeepResearchStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -55,7 +56,9 @@ const QuestionForm = () => {
     }
   }
 
-  if (questions.length === 0) return null;
+  if (!isCompleted) return;
+
+  if (questions.length === 0) return;
 
   return (
     <Card className="w-full max-w-[90vw] sm:max-w-[80vw] xl:max-w-[50vw] shadow-none bg-white/60 backdrop-blur-sm border rounded-xl border-black/10 border-solid">
