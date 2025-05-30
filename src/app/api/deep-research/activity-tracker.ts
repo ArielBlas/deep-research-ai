@@ -11,7 +11,7 @@ export const createActivityTracker = (
       status: Activity["status"],
       message: Activity["message"]
     ) => {
-      dataStream.writeDate({
+      dataStream.writeData({
         type: "activity",
         content: {
           type,

@@ -13,14 +13,8 @@ export async function POST(req: Request) {
     const topic = parsed.topic;
     const clarifications = parsed.clarifications;
 
-    console.log("Topic:", topic);
-    console.log("Clarifications:", clarifications);
-
     return createDataStreamResponse({
       async execute(dataStream) {
-        // Write data
-        // dataStream.writeData({ value: "Hello" });
-
         const researchState: ResearchState = {
           topic: topic,
           completedSteps: 0,
@@ -32,7 +26,6 @@ export async function POST(req: Request) {
 
         await deepResearch(researchState, dataStream);
       },
-      // onError: error => `Custom error: ${error.message}`,
     });
   } catch (error) {
     return new Response(

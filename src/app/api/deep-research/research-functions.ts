@@ -78,7 +78,7 @@ export async function generateSearchQueries(
 
 export async function search(
   query: string,
-  ResearchState: ResearchState,
+  researchState: ResearchState,
   activityTracker: ActivityTracker
 ): Promise<SearchResult[]> {
   activityTracker.add("search", "pending", `Searching for ${query}`);
@@ -109,7 +109,7 @@ export async function search(
         content: r.text || "",
       }));
 
-    ResearchState.completedSteps++;
+    researchState.completedSteps++;
 
     activityTracker.add(
       "search",
